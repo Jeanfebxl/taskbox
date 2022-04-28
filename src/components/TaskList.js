@@ -1,12 +1,34 @@
 import React from "react";
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import Task from "./Task";
-import { connect } from 'react-redux';
-import { archiveTask, pinTask } from '../lib/redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateTaskState } from '../lib/store';
 
-export function PureTaskList({ loading, tasks, onPinTask, onArchiveTask }) {
+export default function TaskList() {
+
+  const tasks = useSelector((state) => {
+    const tasksInOrder = [
+      ...state.taskbox.tasks.filter((t) => t.state === 'TASK_PINNED'),
+      ...state.taskbox.tasks.filter((t) => t.state !== 'TASK_PINNED'),
+    ];
+    const filteredTasks = tasksInOrder.filter(
+      (t) => t.state === 'TASK_INBOX' || t.state === 'TASK_PINNED'
+    );
+    return filteredTasks;
+  });
+
+  const { status } = useSelector((state) => state.taskbox);
+
+  const dispatch = useDispatch();
+
+  const pinTask = (value) => {
+    dispatch(updateTaskState({ id: value, newTaskState: 'TASK_PINNED'}))
+  }
+  const archiveTask = (value) => {
+    dispatch(updateTaskState({ id: value, newTaskState: 'TASK_ARCHIVED'}))
+  }
   
-  if (loading) {
+  if (status === 'loading') {
     const LoadingRow = (
       <div className="loading-item">
         <span className="glow-checkbox" />
@@ -16,7 +38,7 @@ export function PureTaskList({ loading, tasks, onPinTask, onArchiveTask }) {
       </div>
     );
     return (
-      <div className="list-items">
+      <div className="list-items" data-testid="loading" key={"loading"}>
         {LoadingRow}
         {LoadingRow}
         {LoadingRow}
@@ -29,7 +51,7 @@ export function PureTaskList({ loading, tasks, onPinTask, onArchiveTask }) {
   
   if (tasks.length === 0) {
     return (
-      <div className="list-items">
+      <div className="list-items" data-testid="empty" key={"empty"}>
         <div className="wrapper-message">
           <span className="icon-check" />
           <div className="title-message">You have no tasks</div>
@@ -39,45 +61,31 @@ export function PureTaskList({ loading, tasks, onPinTask, onArchiveTask }) {
     );
   }
 
-  const events = {
-    onPinTask,
-    onArchiveTask,
-  };
-  const tasksInOrder = [
-    ...tasks.filter((t) => t.state === 'TASK_PINNED'),
-    ...tasks.filter((t) => t.state !== 'TASK_PINNED'),
-  ]
+
   return (
-    <div className="list-items">
-      {tasksInOrder.map((task) => (
-        <Task key={task.id} task={task} {...events} />
+    <div className="list-items" data-testid="success" key={"success"}>
+      {tasks.map((task) => (
+         <Task
+         key={task.id}
+         task={task}
+         onPinTask={(task) => pinTask(task)}
+         onArchiveTask={(task) => archiveTask(task)}
+       />
       ))}
     </div>
   );
 }
 
-PureTaskList.propTypes = {
-  /** Checks if it's in loading state */
-  loading: PropTypes.bool,
-  /** The list of tasks */
-  tasks: PropTypes.arrayOf(Task.propTypes.task).isRequired,
-  /** Event to change the task to pinned */
-  onPinTask: PropTypes.func,
-  /** Event to change the task to archived */
-  onArchiveTask: PropTypes.func,
-};
-PureTaskList.defaultProps = {
-  loading: false,
-};
-
-
-const mapStateToProps = (state) => ({
-   tasks: state.tasks.filter((t) => t.state === 'TASK_INBOX' || t.state === 'TASK_PINNED'),
-});
-const mapDispatchToProps = (dispatch) => ({
-    onArchiveTask: (id) => dispatch(archiveTask(id)),
-    onPinTask: (id) => dispatch(pinTask(id)),
-});
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(PureTaskList)
+// PureTaskList.propTypes = {
+//   /** Checks if it's in loading state */
+//   loading: PropTypes.bool,
+//   /** The list of tasks */
+//   tasks: PropTypes.arrayOf(Task.propTypes.task).isRequired,
+//   /** Event to change the task to pinned */
+//   onPinTask: PropTypes.func,
+//   /** Event to change the task to archived */
+//   onArchiveTask: PropTypes.func,
+// };
+// PureTaskList.defaultProps = {
+//   loading: false,
+// };
