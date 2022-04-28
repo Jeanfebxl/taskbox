@@ -549,7 +549,7 @@ exports[`Storyshots TaskList Loading 1`] = `
 </div>
 `;
 
-exports[`Storyshots TaskList With Pinned Task 1`] = `
+exports[`Storyshots TaskList With Pinned Tasks 1`] = `
 <div
   style={
     Object {
